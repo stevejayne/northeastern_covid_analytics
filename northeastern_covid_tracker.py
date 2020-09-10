@@ -1,8 +1,11 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from dataclasses import dataclass
+import dataclasses
 import matplotlib.pyplot as plt
-import datetime as dt
+from datetime import datetime as dt
+import json
+import os
 
 
 @dataclass
@@ -83,9 +86,38 @@ def get_data_from_neu_dashboard():
     return data
 
 
-def main():
-    # Get data
+def update_local_data():
+    # Get data from NEU
     data = get_data_from_neu_dashboard()
+
+    # Store the data locally
+    with open("data.json", "w+") as data_file:
+        adjusted_data = []
+        for point in data:
+            adjusted_data.append(dataclasses.asdict(point))
+        data_file.write(json.dumps([str(dt.now()), adjusted_data]))
+    return data
+
+
+def main():
+    data = []
+
+    # Check for and update data
+    if os.path.isfile("data.json"):
+        with open("data.json", 'r', encoding='utf-8') as local_data_file:
+            timestamp, local_data = json.load(local_data_file)
+            delta = dt.now() - dt.strptime(timestamp, '%Y-%m-%d %H:%M:%S.%f')
+
+            # Check if data is older than 30 minutes old
+            if (delta.total_seconds() > 1800):
+                print("Updating local data")
+                data = update_local_data()
+
+            else:
+                for point in local_data:
+                    data.append(Data_Point(**point))
+    else:
+        data = update_local_data()
 
     # Get relevent data
     days = []
@@ -95,7 +127,7 @@ def main():
     mass_positive_percent = []
 
     for data_point in data:
-        days.append(dt.datetime.strptime(data_point.date, '%m/%d/%Y').date())
+        days.append(dt.strptime(data_point.date, '%m/%d/%Y').date())
         daily_positive_tests.append(data_point.positive_tests)
         daily_negative_tests.append(data_point.negative_tests)
         positive_percent.append(data_point.positive_rate)
