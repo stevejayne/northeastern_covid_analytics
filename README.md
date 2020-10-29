@@ -1,18 +1,24 @@
-# Enhanced Northeastern Covid Dashboard
+# Northeastern Covid Analytics
 
-A program that takes Northeastern's public covid numbers and performs additional analysis and alternative graphical representations.
+A program that takes Northeastern's public covid numbers and performs additional analysis with alternative graphical representations.
 
 ## Installation
 
-Clone the repo and you're off.
+1. Clone the repo.
+2. Download a [chromedriver](https://chromedriver.chromium.org/) for your platform and put it in the same directory as the script.
 
 ## Usage
-Run the northeastern.py file and the output will be saved in the same directory as a .png file.
+Run the northeastern_covid_tracker.py file and the output will be saved in its respective directory.
+
+The data will be a .json file in the "data" directory and the graphs will be .png files in the "graphs" directory.
 
 ```shell
 > python3 northeastern_covid_tracker.py
 
 ```
+
+## Example Output
+![Positivity Rate Over Time](example_output.png)
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
