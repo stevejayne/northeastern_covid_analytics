@@ -137,7 +137,7 @@ def get_data_from_neu_dashboard():
 
     # Store the data in array form
     data = []
-    for row in reversed(rows[1:]):
+    for row in reversed(rows):
         points = row.text.split(" ")
         data.append(Data_Point(points[0][:-2] + "20" + points[0][-2:],
                                int(points[1]),
