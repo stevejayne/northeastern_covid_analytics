@@ -21,7 +21,6 @@ class Data_Point:
     negative_rate: int
     positive_tests: int
     positive_rate: int
-    mass_positive_rate: int
 
 
 def get_seven_day_average(data, dates):
@@ -133,7 +132,7 @@ def get_data_from_neu_dashboard():
         return
 
     # Get table from elements
-    table = driver.find_element_by_tag_name("table")
+    table = driver.find_element_by_tag_name("tbody")
     rows = table.find_elements_by_tag_name("tr")
 
     # Store the data in array form
@@ -145,8 +144,7 @@ def get_data_from_neu_dashboard():
                                int(points[2]),
                                float(points[3][:-1]),
                                int(points[4]),
-                               float(points[5][:-1]),
-                               float(points[6][:-1])))
+                               float(points[5][:-1])))
 
     # Quit the driver
     driver.quit()
@@ -199,18 +197,15 @@ def main():
     daily_positive_tests = []
     daily_negative_tests = []
     positive_percent = []
-    mass_positive_percent = []
 
     for data_point in data:
         days.append(dt.strptime(data_point.date, '%m/%d/%Y').date())
         daily_positive_tests.append(data_point.positive_tests)
         daily_negative_tests.append(data_point.negative_tests)
         positive_percent.append(data_point.positive_rate)
-        mass_positive_percent.append(data_point.mass_positive_rate)
 
     # Plot the positive rate
     plot_positivity_rate(days, positive_percent)
-    plot_positivity_rate(days, positive_percent, mass_positive_percent)
 
     # Plot the total number of positive cases
     plot_daily_positive_tests(days, daily_positive_tests)
