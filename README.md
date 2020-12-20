@@ -4,8 +4,8 @@ A program that takes Northeastern's public covid numbers and performs additional
 
 ## Installation
 
-1. Clone the repo.
-2. Import bs4 and matplotlib
+1. Clone the repo
+2. Locally install matplotlib
 
 ## Usage
 Run the northeastern_covid_tracker.py file and the output will be saved in its respective directory.
