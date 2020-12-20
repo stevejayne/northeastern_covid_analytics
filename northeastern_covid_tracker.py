@@ -1,5 +1,5 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
+import requests
 from dataclasses import dataclass
 import dataclasses
 import matplotlib.pyplot as plt
@@ -11,6 +11,7 @@ import os
 DATA_PATH = "data"
 DATA_FILE = os.path.join(DATA_PATH, "data.json")
 GRAPH_PATH = "graphs"
+URL = "https://spreadsheets.google.com/feeds/cells/1C8PDCqHB9DbUYbvrEMN2ZKyeDGAMAxdcNkmO2QSZJsE/1/public/full?alt=json"
 
 
 @dataclass
@@ -18,9 +19,9 @@ class Data_Point:
     date: str
     tests_completed: int
     negative_tests: int
-    negative_rate: int
+    negative_rate: float
     positive_tests: int
-    positive_rate: int
+    positive_rate: float
 
 
 def get_seven_day_average(data, dates):
@@ -115,39 +116,24 @@ def get_data_from_neu_dashboard():
         Return: data
             data(list of Data_Points): all of the neu data, formatted
     """
-    # Open the driver
-    options = Options()
-    options.add_argument("headless")
-    options.add_experimental_option("excludeSwitches", ["enable-logging"])
-    driver = webdriver.Chrome(options=options)
-    driver.implicitly_wait(10)
-
     # Get page elements
-    driver.get("https://news.northeastern.edu/coronavirus/reopening/testing-dashboard/")
+    api_data = json.loads(requests.get(URL).text)
+    entries = len(api_data["feed"]["entry"]) // 23
 
-    # Check that the correct page is gotten
-    if "Testing Dashboard" not in driver.title:
-        print("\nWebpage not found\nExiting program")
-        driver.quit()
-        return
-
-    # Get table from elements
-    table = driver.find_element_by_tag_name("tbody")
-    rows = table.find_elements_by_tag_name("tr")
-
-    # Store the data in array form
+    # Format to local data representation
     data = []
-    for row in reversed(rows):
-        points = row.text.split(" ")
-        data.append(Data_Point(points[0][:-2] + "20" + points[0][-2:],
-                               int(points[1]),
-                               int(points[2]),
-                               float(points[3][:-1]),
-                               int(points[4]),
-                               float(points[5][:-1])))
 
-    # Quit the driver
-    driver.quit()
+    for entry in range(1, entries):
+        date = api_data["feed"]["entry"][entry*23]["content"]["$t"]
+        date = date[:-2] + "20" + date[-2:]
+        tests_given = int(api_data["feed"]["entry"][entry*23 + 1]["content"]["$t"])
+        negative_tests = int(api_data["feed"]["entry"][entry*23 + 3]["content"]["$t"])
+        positive_tests = int(api_data["feed"]["entry"][entry*23 + 2]["content"]["$t"])
+
+        data.append(Data_Point(date, tests_given, negative_tests,
+                               negative_tests / tests_given * 100,
+                               positive_tests,
+                               positive_tests / tests_given * 100))
 
     # Return formatted data
     return data
