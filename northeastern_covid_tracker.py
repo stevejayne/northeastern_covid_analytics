@@ -49,7 +49,8 @@ def save_standard_figure(filename):
         Arguments:
             filename (String): desired name of output file
     """
-    plt.savefig(os.path.join(GRAPH_PATH, filename), dpi=500, format="png")
+    plt.savefig(os.path.join(GRAPH_PATH, filename), dpi=500, pad_inches=.2,
+                bbox_inches='tight', format="png")
 
 
 def plot_positivity_rate(days, positive_percent, mass_positive_percent=None):
