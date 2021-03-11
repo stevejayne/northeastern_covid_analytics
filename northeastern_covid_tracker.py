@@ -64,7 +64,7 @@ def plot_positivity_rate(days, positive_percent, mass_positive_percent=None):
 
     plt.plot(days, positive_percent, label="NEU Rate")
     plt.plot(sda_days, sda_rate, label="NEU 7-Day Average")
-    plt.title("Coronavirus Positive Test Rate at Northeastern")
+    plt.title("Covid-19 Positive Test Rate at Northeastern")
     plt.ylabel("% Positive Tests")
     plt.xlabel("Date")
     plt.xticks(rotation=-20)
@@ -83,10 +83,12 @@ def plot_daily_positive_tests(days, daily_positive_tests):
             days (list of dates): dates on which data was collected
             daily_positive_tests (list of nums): positive tests per day
     """
+    sda_rate, sda_days = get_seven_day_average(daily_positive_tests, days)
     plt.bar(days, daily_positive_tests, .95)
+    plt.plot(sda_days, sda_rate, label="NEU 7-Day Average", color='r')
     plt.ylabel("Positive Tests")
     plt.xlabel("Date")
-    plt.title("Daily New Covid Cases")
+    plt.title("Daily New Covid-19 Cases")
     plt.xticks(rotation=-20)
     save_standard_figure("covid_positives_chart.png")
     plt.clf()
@@ -104,7 +106,7 @@ def plot_tests_and_outcomes(days, daily_positive_tests, daily_negative_tests):
             label="Positive")
     plt.ylabel("Test Performed")
     plt.xlabel("Date")
-    plt.title("Covid Tests Performed")
+    plt.title("Covid-19 Tests Performed")
     plt.legend(loc="upper left")
     plt.xticks(rotation=-20)
     save_standard_figure("covid_tests_performed.png")
