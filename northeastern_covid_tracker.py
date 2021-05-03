@@ -69,6 +69,8 @@ def plot_positivity_rate(days, positive_percent, mass_positive_percent=None):
     plt.xlabel("Date")
     plt.xticks(rotation=-20)
     plt.legend(loc="upper right")
+    plt.ylim(ymin=0.0)
+    plt.xlim(xmin=days[0])
     save_standard_figure("covid_positive_rate_chart.png")
     if mass_positive_percent is not None:
         plt.plot(days, mass_positive_percent, label="Mass Rate")
@@ -90,6 +92,7 @@ def plot_daily_positive_tests(days, daily_positive_tests):
     plt.xlabel("Date")
     plt.title("Daily New Covid-19 Cases")
     plt.xticks(rotation=-20)
+    plt.xlim(xmin=days[0])
     save_standard_figure("covid_positives_chart.png")
     plt.clf()
 
@@ -109,6 +112,7 @@ def plot_tests_and_outcomes(days, daily_positive_tests, daily_negative_tests):
     plt.title("Covid-19 Tests Performed")
     plt.legend(loc="upper left")
     plt.xticks(rotation=-20)
+    plt.xlim(xmin=days[0])
     save_standard_figure("covid_tests_performed.png")
     plt.clf()
 
