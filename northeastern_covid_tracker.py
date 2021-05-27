@@ -132,9 +132,9 @@ def get_data_from_neu_dashboard():
     for entry in range(1, entries):
         date = api_data["feed"]["entry"][entry*23]["content"]["$t"]
         date = date[:-2] + "20" + date[-2:]
-        tests_given = int(api_data["feed"]["entry"][entry*23 + 1]["content"]["$t"])
-        negative_tests = int(api_data["feed"]["entry"][entry*23 + 3]["content"]["$t"])
-        positive_tests = int(api_data["feed"]["entry"][entry*23 + 2]["content"]["$t"])
+        tests_given = int(api_data["feed"]["entry"][entry*23 + 1]["content"]["$t"].replace(',', ''))
+        negative_tests = int(api_data["feed"]["entry"][entry*23 + 3]["content"]["$t"].replace(',', ''))
+        positive_tests = int(api_data["feed"]["entry"][entry*23 + 2]["content"]["$t"].replace(',', ''))
 
         data.append(Data_Point(date, tests_given, negative_tests,
                                negative_tests / tests_given * 100,
