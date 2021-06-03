@@ -133,6 +133,8 @@ def get_data_from_neu_dashboard():
         date = api_data["feed"]["entry"][entry*23]["content"]["$t"]
         date = date[:-2] + "20" + date[-2:]
         tests_given = int(api_data["feed"]["entry"][entry*23 + 1]["content"]["$t"].replace(',', ''))
+        if tests_given == 0:
+            continue
         negative_tests = int(api_data["feed"]["entry"][entry*23 + 3]["content"]["$t"].replace(',', ''))
         positive_tests = int(api_data["feed"]["entry"][entry*23 + 2]["content"]["$t"].replace(',', ''))
 
