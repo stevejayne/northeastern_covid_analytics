@@ -10,7 +10,7 @@ import os
 DATA_PATH = "data"
 DATA_FILE = os.path.join(DATA_PATH, "data.json")
 GRAPH_PATH = "graphs"
-URL = "https://spreadsheets.google.com/feeds/cells/1C8PDCqHB9DbUYbvrEMN2ZKyeDGAMAxdcNkmO2QSZJsE/1/public/full?alt=json"
+GIST_URL = "https://api.github.com/gists/739ea390dcf28b58d8b36bba4ca88d68"
 
 
 @dataclass
@@ -117,39 +117,34 @@ def plot_tests_and_outcomes(days, daily_positive_tests, daily_negative_tests):
     plt.clf()
 
 
-def get_data_from_neu_dashboard():
+def get_data_from_api():
     """ Gets the most up to date covid stats from Northeastern's Dashboard
         Return: data
             data(list of Data_Points): all of the neu data, formatted
     """
-    # Get page elements
-    api_data = json.loads(requests.get(URL).text)
-    entries = len(api_data["feed"]["entry"]) // 23
-
-    # Format to local data representation
+    local_data = json.loads(json.loads(requests.get(GIST_URL).text)["files"]["data.json"]["content"])
     data = []
 
-    for entry in range(1, entries):
-        date = api_data["feed"]["entry"][entry*23]["content"]["$t"]
-        date = date[:-2] + "20" + date[-2:]
-        tests_given = int(api_data["feed"]["entry"][entry*23 + 1]["content"]["$t"].replace(',', ''))
+    for entry in local_data:
+        date = entry["date"]
+        formatted_date = f"{date[5:7]}/{date[-2:]}/{date[:4]}"
+        tests_given = int(entry["total_tests"])
         if tests_given == 0:
             continue
-        negative_tests = int(api_data["feed"]["entry"][entry*23 + 3]["content"]["$t"].replace(',', ''))
-        positive_tests = int(api_data["feed"]["entry"][entry*23 + 2]["content"]["$t"].replace(',', ''))
+        negative_tests = int(entry["negative_tests"])
+        positive_tests = int(entry["positive_tests"])
 
-        data.append(Data_Point(date, tests_given, negative_tests,
+        data.append(Data_Point(formatted_date, tests_given, negative_tests,
                                negative_tests / tests_given * 100,
                                positive_tests,
                                positive_tests / tests_given * 100))
-
     # Return formatted data
     return data
 
 
 def update_local_data():
     # Get data from NEU
-    data = get_data_from_neu_dashboard()
+    data = get_data_from_api()
 
     # Store the data locally
     with open(DATA_FILE, "w+") as data_file:
