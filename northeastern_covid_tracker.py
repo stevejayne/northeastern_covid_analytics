@@ -12,6 +12,8 @@ DATA_FILE = os.path.join(DATA_PATH, "data.json")
 GRAPH_PATH = "graphs"
 GIST_URL = "https://api.github.com/gists/739ea390dcf28b58d8b36bba4ca88d68"
 
+MIN_TESTS_FOR_SIGNIFICANCE = 50
+
 
 @dataclass
 class Data_Point:
@@ -129,7 +131,8 @@ def get_data_from_api():
         date = entry["date"]
         formatted_date = f"{date[5:7]}/{date[-2:]}/{date[:4]}"
         tests_given = int(entry["total_tests"])
-        if tests_given == 0:
+        if tests_given == 0 or tests_given < MIN_TESTS_FOR_SIGNIFICANCE:
+            # Ignore extraneous or unrepresentative data
             continue
         negative_tests = int(entry["negative_tests"])
         positive_tests = int(entry["positive_tests"])
