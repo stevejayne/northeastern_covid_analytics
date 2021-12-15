@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+from typing import List, Tuple
 import requests
 from dataclasses import dataclass
 import dataclasses
@@ -13,6 +16,7 @@ GRAPH_PATH = "graphs"
 GIST_URL = "https://api.github.com/gists/739ea390dcf28b58d8b36bba4ca88d68"
 
 MIN_TESTS_FOR_SIGNIFICANCE = 50
+UPDATE_THRESHOLD = 1800  # Seconds
 
 
 @dataclass
@@ -25,7 +29,7 @@ class Data_Point:
     positive_rate: float
 
 
-def get_seven_day_average(data, dates):
+def get_seven_day_average(data: List[float], dates: List[str]) -> Tuple[List[float], List[str]]:
     """ Calculates the 7-day averate of a given quantity over given time
         Arguments:
             data(list of numbers): data of which the average is taken
@@ -46,7 +50,7 @@ def get_seven_day_average(data, dates):
     return seven_day_average_data, seven_day_average_dates
 
 
-def save_standard_figure(filename):
+def save_standard_figure(filename: str):
     """ A wrapper that specifies the output path and format of graphs
         Arguments:
             filename (String): desired name of output file
@@ -55,7 +59,7 @@ def save_standard_figure(filename):
                 bbox_inches='tight', format="png")
 
 
-def plot_positivity_rate(days, positive_percent, mass_positive_percent=None):
+def plot_positivity_rate(days: List[str], positive_percent: List[float], mass_positive_percent: List[float] = None):
     """ Plots the changing positivity rate with each day
         Arguments:
             days (list of dates): dates on which data was collected
@@ -81,7 +85,7 @@ def plot_positivity_rate(days, positive_percent, mass_positive_percent=None):
     plt.clf()
 
 
-def plot_daily_positive_tests(days, daily_positive_tests):
+def plot_daily_positive_tests(days: List[str], daily_positive_tests: List[float]):
     """ Plots the number of positive test per day
         Arguments:
             days (list of dates): dates on which data was collected
@@ -99,7 +103,7 @@ def plot_daily_positive_tests(days, daily_positive_tests):
     plt.clf()
 
 
-def plot_tests_and_outcomes(days, daily_positive_tests, daily_negative_tests):
+def plot_tests_and_outcomes(days: List[str], daily_positive_tests: List[float], daily_negative_tests: List[float]):
     """ Plots the changing positivity rate with each day
         Arguments:
             days (list of dates): dates on which data was collected
@@ -119,15 +123,16 @@ def plot_tests_and_outcomes(days, daily_positive_tests, daily_negative_tests):
     plt.clf()
 
 
-def get_data_from_api():
+def get_data_from_api() -> List[Data_Point]:
     """ Gets the most up to date covid stats from Northeastern's Dashboard
         Return: data
             data(list of Data_Points): all of the neu data, formatted
     """
-    local_data = json.loads(json.loads(requests.get(GIST_URL).text)["files"]["data.json"]["content"])
+    response_payload = requests.get(GIST_URL).json()["files"]["data.json"]["content"]
+    api_data = json.loads(response_payload)
     data = []
 
-    for entry in local_data:
+    for entry in api_data:
         date = entry["date"]
         formatted_date = f"{date[5:7]}/{date[-2:]}/{date[:4]}"
         tests_given = int(entry["total_tests"])
@@ -145,7 +150,7 @@ def get_data_from_api():
     return data
 
 
-def update_local_data():
+def update_local_data() -> List[Data_Point]:
     # Get data from NEU
     data = get_data_from_api()
 
@@ -159,6 +164,10 @@ def update_local_data():
 
 
 def main():
+    """
+    Use local data or update data from API to plot various graphs
+    reflecting the covid testing stats at Northeastern.
+    """
     data = []
 
     # Ensure local files exist
@@ -173,8 +182,8 @@ def main():
             timestamp, local_data = json.load(local_data_file)
             delta = dt.now() - dt.strptime(timestamp, '%Y-%m-%d %H:%M:%S.%f')
 
-            # Check if data is older than 30 minutes old
-            if (delta.total_seconds() > 1800):
+            # Check if data is more than 30 minutes old
+            if (delta.total_seconds() > UPDATE_THRESHOLD):
                 print("Updating local data")
                 data = update_local_data()
 
