@@ -29,10 +29,30 @@ class Data_Point:
     positive_rate: float
 
 
-def get_seven_day_average(data: List[float], dates: List[str]) -> Tuple[List[float], List[str]]:
+def sum_weekly(list: List[int], index: int) -> int:
+    """
+    Sums a week's worth of data
+    Arugments:
+        list (list of nums): list of values to be summed
+        index (int): starting index in list
+    Return:
+        integer sum of weekly value
+    Raises:
+        Value error if the list cannot be summed at the given index
+    """
+    if index >= 7:
+        return (list[index] + list[index-1] + list[index-2] + list[index-3]
+                + list[index-4] + list[index-5] + list[index-6])
+    else:
+        raise ValueError("Given index-list pair invalid")
+
+
+def get_seven_day_average_positives(positive_tests: List[int], total_tests: List[int],
+                                    dates: List[str]) -> Tuple[List[float], List[str]]:
     """ Calculates the 7-day averate of a given quantity over given time
         Arguments:
-            data(list of numbers): data of which the average is taken
+            positive_tests(list of numbers): postive test on a given day
+            total_tests(list of numbers): total tests on a given day
             dates(list of variable type X): dates corresponding to given data
         Return: seven_day_average_data, seven_day_average_dates
             seven_day_average_data(list of numbers): the 7-day averages
@@ -41,12 +61,39 @@ def get_seven_day_average(data: List[float], dates: List[str]) -> Tuple[List[flo
     seven_day_average_data = []
     seven_day_average_dates = []
 
-    for x in range(len(data)):
+    for x in range(len(positive_tests)):
         if x >= 7:
-            average = (data[x] + data[x-1] + data[x-2] + data[x-3]
-                       + data[x-4] + data[x-5] + data[x-6]) / 7
+            weekly_total_positives = sum_weekly(positive_tests, x)
+            weekly_total_tests = sum_weekly(total_tests, x)
+
+            average = weekly_total_positives / weekly_total_tests * 100
             seven_day_average_data.append(average)
             seven_day_average_dates.append(dates[x])
+
+    return seven_day_average_data, seven_day_average_dates
+
+
+def get_seven_day_average_total(positive_tests: List[int],
+                                dates: List[str]) -> Tuple[List[float], List[str]]:
+    """ Calculates the 7-day averate of a given quantity over given time
+        Arguments:
+            positive_tests(list of numbers): postive test on a given day
+            dates(list of variable type X): dates corresponding to given data
+        Return: seven_day_average_data, seven_day_average_dates
+            seven_day_average_data(list of numbers): the 7-day averages
+            seven_day_average_dates(list of var type X): corresponding dates
+    """
+    seven_day_average_data = []
+    seven_day_average_dates = []
+
+    for x in range(len(positive_tests)):
+        if x >= 7:
+            weekly_total_positives = sum_weekly(positive_tests, x)
+
+            average = weekly_total_positives / 7
+            seven_day_average_data.append(average)
+            seven_day_average_dates.append(dates[x])
+
     return seven_day_average_data, seven_day_average_dates
 
 
@@ -59,14 +106,17 @@ def save_standard_figure(filename: str):
                 bbox_inches='tight', format="png")
 
 
-def plot_positivity_rate(days: List[str], positive_percent: List[float], mass_positive_percent: List[float] = None):
+def plot_positivity_rate(days: List[str], positive_percent: List[float],
+                         positive_tests: List[int], total_tests: List[int],
+                         mass_positive_percent: List[float] = None):
     """ Plots the changing positivity rate with each day
         Arguments:
             days (list of dates): dates on which data was collected
-            positive_percent (list of nums): positivity rates for each date
+            positive_tests (list of integers): positive test each day
+            total_tests (list of integers): total tests each day
             mass_positive_percent (list of nums): positivity rates of Mass
     """
-    sda_rate, sda_days = get_seven_day_average(positive_percent, days)
+    sda_rate, sda_days = get_seven_day_average_positives(positive_tests, total_tests, days)
 
     plt.plot(days, positive_percent, label="NEU Rate")
     plt.plot(sda_days, sda_rate, label="NEU 7-Day Average")
@@ -85,13 +135,14 @@ def plot_positivity_rate(days: List[str], positive_percent: List[float], mass_po
     plt.clf()
 
 
-def plot_daily_positive_tests(days: List[str], daily_positive_tests: List[float]):
+def plot_daily_positive_tests(days: List[str], daily_positive_tests: List[int]):
     """ Plots the number of positive test per day
         Arguments:
             days (list of dates): dates on which data was collected
             daily_positive_tests (list of nums): positive tests per day
+            total_test (list of nums): total tests on a given day
     """
-    sda_rate, sda_days = get_seven_day_average(daily_positive_tests, days)
+    sda_rate, sda_days = get_seven_day_average_total(daily_positive_tests, days)
     plt.bar(days, daily_positive_tests, .95)
     plt.plot(sda_days, sda_rate, label="NEU 7-Day Average", color='r')
     plt.ylabel("Positive Tests")
@@ -197,16 +248,18 @@ def main():
     days = []
     daily_positive_tests = []
     daily_negative_tests = []
+    daily_total_tests = []
     positive_percent = []
 
     for data_point in data:
         days.append(dt.strptime(data_point.date, '%m/%d/%Y').date())
         daily_positive_tests.append(data_point.positive_tests)
         daily_negative_tests.append(data_point.negative_tests)
+        daily_total_tests.append(data_point.tests_completed)
         positive_percent.append(data_point.positive_rate)
 
     # Plot the positive rate
-    plot_positivity_rate(days, positive_percent)
+    plot_positivity_rate(days, positive_percent, daily_positive_tests, daily_total_tests)
 
     # Plot the total number of positive cases
     plot_daily_positive_tests(days, daily_positive_tests)
