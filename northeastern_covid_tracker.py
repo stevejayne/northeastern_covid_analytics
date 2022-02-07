@@ -40,7 +40,7 @@ def sum_weekly(list: List[int], index: int) -> int:
     Raises:
         Value error if the list cannot be summed at the given index
     """
-    if index >= 7:
+    if index >= 6:
         return (list[index] + list[index-1] + list[index-2] + list[index-3]
                 + list[index-4] + list[index-5] + list[index-6])
     else:
