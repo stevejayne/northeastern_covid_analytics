@@ -2,6 +2,7 @@
 
 from typing import List, Tuple
 import requests
+from requests import ConnectTimeout, ConnectionError
 from dataclasses import dataclass
 import dataclasses
 import matplotlib.pyplot as plt
@@ -179,29 +180,41 @@ def get_data_from_api() -> List[Data_Point]:
         Return: data
             data(list of Data_Points): all of the neu data, formatted
     """
-    response_payload = requests.get(GIST_URL).json()["files"]["data.json"]["content"]
-    api_data = json.loads(response_payload)
     data = []
 
-    for entry in api_data:
-        date = entry["date"]
-        formatted_date = f"{date[5:7]}/{date[-2:]}/{date[:4]}"
-        tests_given = int(entry["total_tests"])
-        if tests_given == 0 or tests_given < MIN_TESTS_FOR_SIGNIFICANCE:
-            # Ignore extraneous or unrepresentative data
-            continue
-        negative_tests = int(entry["negative_tests"])
-        positive_tests = int(entry["positive_tests"])
+    try:
+        response_payload = requests.get(GIST_URL).json()["files"]["data.json"]["content"]
+        api_data = json.loads(response_payload)
 
-        data.append(Data_Point(formatted_date, tests_given, negative_tests,
-                               negative_tests / tests_given * 100,
-                               positive_tests,
-                               positive_tests / tests_given * 100))
+        for entry in api_data:
+            date = entry["date"]
+            formatted_date = f"{date[5:7]}/{date[-2:]}/{date[:4]}"
+            tests_given = int(entry["total_tests"])
+            if tests_given == 0 or tests_given < MIN_TESTS_FOR_SIGNIFICANCE:
+                # Ignore extraneous or unrepresentative data
+                continue
+            negative_tests = int(entry["negative_tests"])
+            positive_tests = int(entry["positive_tests"])
+
+            data.append(Data_Point(formatted_date, tests_given, negative_tests,
+                                   negative_tests / tests_given * 100,
+                                   positive_tests,
+                                   positive_tests / tests_given * 100))
+
+    except ConnectionError or ConnectTimeout:
+        print("Connection error, data could not be updated")
+
     # Return formatted data
     return data
 
 
 def update_local_data() -> List[Data_Point]:
+    """ Get data from API and store/update a local copy
+        Return:
+            data (List of Data_Point): covid data formatted as local data type
+    """
+    print("Updating local data")
+
     # Get data from NEU
     data = get_data_from_api()
 
@@ -235,7 +248,6 @@ def main():
 
             # Check if data is more than 30 minutes old
             if (delta.total_seconds() > UPDATE_THRESHOLD):
-                print("Updating local data")
                 data = update_local_data()
 
             else:
